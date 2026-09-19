@@ -53,17 +53,21 @@ export function LearningProvider({ children }: { children: ReactNode }) {
     busy.current = true;
     setSyncStatus("Syncing…");
     try {
-      const sent = current.current;
-      const merged = await syncCloud(sent, uid);
-      const changedWhileSyncing = current.current !== sent;
-      if (identity.current !== uid) return;
-      const next = mergeData(current.current, merged);
-      saveLocal(next, uid);
-      current.current = next;
-      setData(next);
-      setSyncStatus(
-        changedWhileSyncing ? "Saved locally · sync pending" : "Synced",
-      );
+      // Drain changes made while a request was in flight before reporting Synced.
+      // Auth restoration and handwriting can both update the local snapshot.
+      let pending = true;
+      while (pending && identity.current === uid && navigator.onLine) {
+        const sent = current.current;
+        const merged = await syncCloud(sent, uid);
+        if (identity.current !== uid) return;
+        pending = current.current !== sent;
+        const next = mergeData(current.current, merged);
+        saveLocal(next, uid);
+        current.current = next;
+        setData(next);
+        setSyncStatus(pending ? "Syncing…" : "Synced");
+      }
+      if (pending) setSyncStatus("Saved locally · sync pending");
     } catch {
       setSyncStatus("Saved locally · sync pending");
     } finally {
