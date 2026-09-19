@@ -19,14 +19,15 @@ For a phone on the same Wi-Fi, open `http://YOUR_COMPUTER_LAN_IP:3000`. The dev 
 
 - Press **Start Learning** on your first visit, then **Start Practice** on future visits.
 - The first session introduces 我, 你, 他, 人, 是. Each introduction includes meanings, pronunciation, and replayable stroke order.
-- Write each character ten times, then recall the word and assess it yourself. Writing has no recognition or grading.
+- Write each new character ten times: three traces with a fading guide, four copies, then three attempts from memory. Shorter review sets use the same trace → copy → memory progression. Each character starts its own cycle. Stroke order remains available as a hint.
+- After recall, compare your original handwriting beside the reference Hanzi before rating it. The drawing is read-only during comparison and remains ephemeral; there is no recognition or automatic grading.
 - Forgot / Hard / Good / Easy map to FSRS Again / Hard / Good / Easy. Recall No / Almost / Yes map to Again / Hard / Good.
 - Due words go first. Sessions include up to 15 due reviews and up to five new words per local calendar day. When 15 or more reviews are due, the session focuses on reviews. Start another session for the remaining reviews.
 - A word is **Learning** after its first rated recall. It is **Strong** when FSRS puts it in Review state with stability of at least seven days. Strong is a useful learning indicator, not a guarantee of permanent recall.
 - Browse all words and tap **Practice writing** for manual practice, including words outside the daily plan. Manual practice ends in a rated recall and can introduce a word outside the normal five-word limit.
 - Use the close button to pause. Completed reviews, repetitions, and your position in the session persist. In-progress drawings are intentionally ephemeral. Reset count starts that character’s repetition target again; completed attempts remain in statistics.
 
-Writing targets and limits live in `lib/practice/session.ts`: new 10, learning 5, strong 3. Multi-character words are written character by character, then recalled as a whole word. A repetition means one completed canvas attempt; recall drawings count too.
+Guide stages and opacity live in `lib/practice/writing-guide.ts`. Writing targets and limits live in `lib/practice/session.ts`: new 10, learning 5, strong 3. Multi-character words are written character by character, then recalled as a whole word. A repetition means one completed canvas attempt; recall drawings count too.
 
 ## Production
 

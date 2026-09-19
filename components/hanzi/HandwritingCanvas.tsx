@@ -8,13 +8,19 @@ import {
   useImperativeHandle,
 } from "react";
 import { Undo2, Eraser } from "lucide-react";
+import { HanziGlyph } from "./HanziGlyph";
 type Point = { x: number; y: number; p: number };
 export type CanvasHandle = { clear: () => void; hasInk: () => boolean };
 export const HandwritingCanvas = forwardRef<
   CanvasHandle,
-  { onInkChange?: (hasInk: boolean) => void; label?: string }
+  {
+    onInkChange?: (hasInk: boolean) => void;
+    label?: string;
+    guide?: { character: string; opacity: number };
+    readOnly?: boolean;
+  }
 >(function HandwritingCanvas(
-  { onInkChange, label = "Handwriting practice area" },
+  { onInkChange, label = "Handwriting practice area", guide, readOnly = false },
   ref,
 ) {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -131,17 +137,26 @@ export const HandwritingCanvas = forwardRef<
     };
   }
   return (
-    <div className="writing-block">
+    <div className={`writing-block${readOnly ? " is-readonly" : ""}`}>
       <div className="writing-paper">
         <span className="grid-diagonal one" />
         <span className="grid-diagonal two" />
+        {guide && (
+          <div
+            className="tracing-guide"
+            style={{ opacity: guide.opacity }}
+            aria-hidden="true"
+          >
+            <HanziGlyph character={guide.character} />
+          </div>
+        )}
         <canvas
           ref={canvas}
           aria-label={label}
           role="img"
           onContextMenu={(e) => e.preventDefault()}
           onPointerDown={(e) => {
-            if (pointer.current !== null || e.button > 0) return;
+            if (readOnly || pointer.current !== null || e.button > 0) return;
             e.preventDefault();
             pointer.current = e.pointerId;
             e.currentTarget.setPointerCapture(e.pointerId);
@@ -150,7 +165,7 @@ export const HandwritingCanvas = forwardRef<
             notify();
           }}
           onPointerMove={(e) => {
-            if (pointer.current !== e.pointerId) return;
+            if (readOnly || pointer.current !== e.pointerId) return;
             e.preventDefault();
             const events = e.nativeEvent.getCoalescedEvents?.() ?? [
               e.nativeEvent,
@@ -173,26 +188,28 @@ export const HandwritingCanvas = forwardRef<
             pointer.current = null;
           }}
         />
-        <span className="paper-caption">WRITE HERE</span>
+        {!readOnly && <span className="paper-caption">WRITE HERE</span>}
       </div>
-      <div className="canvas-tools">
-        <button className="text-button" disabled={!hasInk} onClick={clear}>
-          <Eraser size={17} /> Clear
-        </button>
-        <span>Pen or finger</span>
-        <button
-          className="text-button"
-          disabled={!hasInk}
-          onClick={() => {
-            strokes.current.pop();
-            pointer.current = null;
-            redraw();
-            notify();
-          }}
-        >
-          <Undo2 size={17} /> Undo
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="canvas-tools">
+          <button className="text-button" disabled={!hasInk} onClick={clear}>
+            <Eraser size={17} /> Clear
+          </button>
+          <span>Pen or finger</span>
+          <button
+            className="text-button"
+            disabled={!hasInk}
+            onClick={() => {
+              strokes.current.pop();
+              pointer.current = null;
+              redraw();
+              notify();
+            }}
+          >
+            <Undo2 size={17} /> Undo
+          </button>
+        </div>
+      )}
     </div>
   );
 });

@@ -17,6 +17,8 @@ import {
 } from "@/components/hanzi/HandwritingCanvas";
 import { StrokeOrder } from "@/components/hanzi/StrokeOrder";
 import { AudioButton } from "@/components/hanzi/AudioButton";
+import { HanziGlyph } from "@/components/hanzi/HanziGlyph";
+import { writingGuide } from "@/lib/practice/writing-guide";
 type SessionState = {
   exercises: Exercise[];
   index: number;
@@ -77,6 +79,7 @@ function Session({ wordId }: { wordId: string | null }) {
   const exercise = session.exercises[session.index];
   const word = vocabulary.find((w) => w.id === exercise?.wordId);
   const finished = session.index >= session.exercises.length;
+  const guide = writingGuide(session.repetition, exercise?.repetitions ?? 5);
   useEffect(() => {
     onboard();
   }, [onboard]);
@@ -125,6 +128,7 @@ function Session({ wordId }: { wordId: string | null }) {
     write(word.id, word.characters[session.character]);
     canvas.current.clear();
     setInk(false);
+    setShowStrokes(false);
     const count = session.repetition + 1;
     setSession((s) => ({ ...s, written: s.written + 1 }));
     if (count >= (exercise.repetitions ?? 5)) {
@@ -276,20 +280,30 @@ function Session({ wordId }: { wordId: string | null }) {
           <>
             <div className="exercise-label">SEE IT. WRITE IT. REMEMBER IT.</div>
             <div className="writing-target">
-              <h1 className="hanzi" lang="zh-CN">
-                {word.characters[session.character]}
+              <h1
+                className="hanzi"
+                lang="zh-CN"
+                aria-label={
+                  guide.stage === "memory"
+                    ? "Character hidden for recall"
+                    : undefined
+                }
+              >
+                {guide.stage === "memory"
+                  ? "?"
+                  : word.characters[session.character]}
               </h1>
               <div>
                 <p className="pinyin">{word.pinyin}</p>
                 <p>{word.meaningEn}</p>
                 {word.characters.length > 1 && (
                   <small className="muted">
-                    {word.hanzi} · character {session.character + 1} of{" "}
-                    {word.characters.length}
+                    {guide.stage !== "memory" && <>{word.hanzi} · </>}Character{" "}
+                    {session.character + 1} of {word.characters.length}
                   </small>
                 )}
               </div>
-              <AudioButton text={word.hanzi} />
+              <AudioButton text={word.hanzi} label="Hear pronunciation" />
             </div>
             <div className="repetition-heading">
               <strong>Write {exercise.repetitions} times</strong>
@@ -305,7 +319,32 @@ function Session({ wordId }: { wordId: string | null }) {
                 />
               ))}
             </div>
-            <HandwritingCanvas ref={canvas} onInkChange={setInk} />
+            <div
+              className="writing-stage"
+              data-stage={guide.stage}
+              aria-live="polite"
+            >
+              <span>
+                {guide.stage === "trace"
+                  ? "1 · TRACE"
+                  : guide.stage === "copy"
+                    ? "2 · COPY"
+                    : "3 · RECALL"}
+              </span>
+              <p>{guide.label}</p>
+            </div>
+            <HandwritingCanvas
+              ref={canvas}
+              onInkChange={setInk}
+              guide={
+                guide.stage === "trace"
+                  ? {
+                      character: word.characters[session.character],
+                      opacity: guide.opacity,
+                    }
+                  : undefined
+              }
+            />
             <button
               className="primary-button"
               disabled={!ink}
@@ -330,6 +369,7 @@ function Session({ wordId }: { wordId: string | null }) {
                 className="text-button"
                 onClick={() => {
                   canvas.current?.clear();
+                  setShowStrokes(false);
                   setSession((s) => ({ ...s, repetition: 0 }));
                 }}
               >
@@ -337,7 +377,12 @@ function Session({ wordId }: { wordId: string | null }) {
                 Reset count
               </button>
             </div>
-            {showStrokes && <StrokeOrder characters={word.characters} />}
+            {showStrokes && (
+              <StrokeOrder
+                key={session.character}
+                characters={[word.characters[session.character]]}
+              />
+            )}
             <p className="helper">
               Take your time. You’re your own best judge.
             </p>
@@ -363,29 +408,75 @@ function Session({ wordId }: { wordId: string | null }) {
                   <p className="muted">{word.meaningId}</p>
                 </>
               )}
-              {revealed && (
+              {revealed && exercise.type === "recognition" && (
                 <div className="revealed-answer">
-                  {exercise.type === "recall" ? (
-                    <h1 className="hanzi large" lang="zh-CN">
-                      {word.hanzi}
-                    </h1>
-                  ) : (
-                    <>
-                      <p className="pinyin">{word.pinyin}</p>
-                      <h2>{word.meaningEn}</h2>
-                      <p className="muted">{word.meaningId}</p>
-                    </>
-                  )}
+                  <p className="pinyin">{word.pinyin}</p>
+                  <h2>{word.meaningEn}</h2>
+                  <p className="muted">{word.meaningId}</p>
                   <AudioButton text={word.hanzi} />
                 </div>
               )}
             </div>
-            {exercise.type === "recall" && !revealed && (
+            {exercise.type === "recall" && (
               <>
                 <p className="recall-instruction">
-                  Write the Hanzi from memory
+                  {revealed
+                    ? "Compare the shape, spacing, and strokes."
+                    : "Write the Hanzi from memory"}
                 </p>
-                <HandwritingCanvas ref={canvas} onInkChange={setInk} />
+                <div
+                  className={
+                    revealed
+                      ? "recall-workspace handwriting-comparison"
+                      : "recall-workspace"
+                  }
+                >
+                  <div>
+                    {revealed && (
+                      <p className="comparison-label">Your writing</p>
+                    )}
+                    <HandwritingCanvas
+                      ref={canvas}
+                      onInkChange={setInk}
+                      readOnly={revealed}
+                      label={
+                        revealed
+                          ? "Your handwriting for comparison"
+                          : "Handwriting practice area"
+                      }
+                    />
+                    {revealed && !ink && (
+                      <p className="helper">No handwriting yet. That’s okay.</p>
+                    )}
+                  </div>
+                  {revealed && (
+                    <div>
+                      <p className="comparison-label">Reference</p>
+                      <div
+                        className="writing-paper reference-paper"
+                        role="img"
+                        aria-label={`Correct Hanzi: ${word.hanzi}`}
+                        lang="zh-CN"
+                      >
+                        <span className="grid-diagonal one" />
+                        <span className="grid-diagonal two" />
+                        <div className="reference-characters">
+                          {word.characters.map((character, index) => (
+                            <HanziGlyph key={index} character={character} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {revealed && (
+                  <div className="comparison-answer">
+                    <h1 className="hanzi" lang="zh-CN">
+                      {word.hanzi}
+                    </h1>
+                    <AudioButton text={word.hanzi} />
+                  </div>
+                )}
               </>
             )}
             {!revealed ? (

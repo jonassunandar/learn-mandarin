@@ -40,6 +40,15 @@ test("mobile learning, writing controls, review, persistence, collection and dar
   await expect(
     page.getByRole("button", { name: "Next repetition" }),
   ).toBeDisabled();
+  await expect(page.locator(".writing-stage")).toHaveAttribute(
+    "data-stage",
+    "trace",
+  );
+  await expect(page.locator(".tracing-guide svg path").first()).toBeAttached();
+  await page.screenshot({
+    path: "test-results/fading-guide-mobile.png",
+    fullPage: true,
+  });
   await draw(page);
   await page.getByRole("button", { name: "Undo", exact: true }).click();
   await expect(
@@ -53,13 +62,24 @@ test("mobile learning, writing controls, review, persistence, collection and dar
   // Dispatch a real stylus stroke through Chromium's input system, then interrupt it.
   const cdp = await page.context().newCDPSession(page);
   const box = (await page.locator("canvas").boundingBox())!;
-  const scrollBefore=await page.evaluate(()=>scrollY);
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:box.x+90,y:box.y+90,id:1}]});
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:box.x+150,y:box.y+170,id:1}]});
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});
-  await expect(page.getByRole('button',{name:'Next repetition'})).toBeEnabled();
-  expect(await page.evaluate(()=>scrollY)).toBe(scrollBefore);
-  await page.getByRole('button',{name:'Clear',exact:true}).click();
+  const scrollBefore = await page.evaluate(() => scrollY);
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: box.x + 90, y: box.y + 90, id: 1 }],
+  });
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ x: box.x + 150, y: box.y + 170, id: 1 }],
+  });
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchCancel",
+    touchPoints: [],
+  });
+  await expect(
+    page.getByRole("button", { name: "Next repetition" }),
+  ).toBeEnabled();
+  expect(await page.evaluate(() => scrollY)).toBe(scrollBefore);
+  await page.getByRole("button", { name: "Clear", exact: true }).click();
 
   await cdp.send("Input.dispatchMouseEvent", {
     type: "mousePressed",
@@ -107,6 +127,22 @@ test("mobile learning, writing controls, review, persistence, collection and dar
   await page.getByRole("link", { name: "Start Practice", exact: true }).click();
   await expect(page.locator(".repetition-heading")).toContainText("1 / 10");
   for (let i = 1; i < 10; i++) {
+    await expect(page.locator(".writing-stage")).toHaveAttribute(
+      "data-stage",
+      i < 3 ? "trace" : i < 7 ? "copy" : "memory",
+    );
+    if (i < 3)
+      expect(
+        Number(
+          await page
+            .locator(".tracing-guide")
+            .evaluate((el) => getComputedStyle(el).opacity),
+        ),
+      ).toBeLessThan(0.24);
+    else await expect(page.locator(".tracing-guide")).toHaveCount(0);
+    await expect(page.locator(".writing-target h1")).toHaveText(
+      i < 7 ? "我" : "?",
+    );
     await draw(page);
     await page
       .getByRole("button", {
@@ -117,7 +153,46 @@ test("mobile learning, writing controls, review, persistence, collection and dar
   }
   await expect(page.getByText("Write the Hanzi from memory")).toBeVisible();
   await draw(page);
+  const drawing = await page.locator("canvas").elementHandle();
   await page.getByRole("button", { name: "Reveal answer" }).click();
+  await expect(
+    page.getByRole("img", { name: "Correct Hanzi: 我" }),
+  ).toBeVisible();
+  expect(
+    await drawing!.evaluate((el) => el === document.querySelector("canvas")),
+  ).toBe(true);
+  await expect(page.locator("canvas")).toHaveCSS("pointer-events", "none");
+  await expect(
+    page.getByRole("button", { name: "Clear", exact: true }),
+  ).toHaveCount(0);
+  await expect
+    .poll(() =>
+      page
+        .locator("canvas")
+        .evaluate((el: HTMLCanvasElement) =>
+          [
+            ...el.getContext("2d")!.getImageData(0, 0, el.width, el.height)
+              .data,
+          ].some((v, i) => i % 4 === 3 && v > 0),
+        ),
+    )
+    .toBe(true);
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.screenshot({
+    path: "test-results/comparison-light-360.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await page.screenshot({
+    path: "test-results/comparison-dark-360.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Switch to light mode" }).click();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
   await expect(page.locator("h1")).toHaveText("我");
   await page.getByRole("button", { name: "Yes", exact: true }).click();
   await expect(page.locator("h1")).toHaveText("你");
@@ -226,6 +301,10 @@ test("multi-character words advance each character before whole-word recall", as
   await expect(page.locator(".writing-target h1")).toHaveText("你");
   for (const char of ["你", "好"]) {
     await expect(page.locator(".writing-target h1")).toHaveText(char);
+    await expect(page.locator(".writing-stage")).toHaveAttribute(
+      "data-stage",
+      "trace",
+    );
     for (let i = 0; i < 10; i++) {
       await draw(page);
       await page
@@ -243,6 +322,10 @@ test("multi-character words advance each character before whole-word recall", as
   }
   await page.getByRole("button", { name: "Reveal answer" }).click();
   await expect(page.locator("h1")).toHaveText("你好");
+  await expect(
+    page.getByText("No handwriting yet. That’s okay."),
+  ).toBeVisible();
+  await expect(page.locator(".reference-characters svg")).toHaveCount(2);
   await page.getByRole("button", { name: "Almost" }).click();
   await expect(
     page.getByRole("heading", { name: "A good place to pause." }),

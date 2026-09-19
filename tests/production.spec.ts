@@ -104,6 +104,14 @@ test.describe("production Supabase", () => {
         .getByRole("button", { name: "Practice writing", exact: true })
         .click();
       for (let i = 0; i < 10; i++) {
+        await expect(page.locator(".writing-stage")).toHaveAttribute(
+          "data-stage",
+          i < 3 ? "trace" : i < 7 ? "copy" : "memory",
+        );
+        if (i === 0)
+          await expect(
+            page.locator(".tracing-guide svg path").first(),
+          ).toBeAttached();
         const rect = (await page.locator("canvas").boundingBox())!;
         await page.mouse.move(rect.x + 80, rect.y + 80);
         await page.mouse.down();
@@ -117,6 +125,12 @@ test.describe("production Supabase", () => {
           .click();
       }
       await page.getByRole("button", { name: "Reveal answer" }).click();
+      await expect(
+        page.getByRole("img", { name: "Correct Hanzi: 我" }),
+      ).toBeVisible();
+      await expect(
+        page.locator(".reference-characters svg path").first(),
+      ).toBeAttached();
       await page.getByRole("button", { name: "Yes", exact: true }).click();
       await page.getByRole("button", { name: "Pause practice" }).click();
       await page.getByRole("link", { name: "Save & leave" }).click();
