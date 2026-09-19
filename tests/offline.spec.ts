@@ -11,20 +11,22 @@ test("production PWA caches the full shell and supports offline navigation, stro
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
   });
-  await page.waitForFunction(
-    async () => {
-      const keys = await caches.keys();
-      const cache = await caches.open(
-        keys.find((k) => k.startsWith("hanzi100-"))!,
-      );
-      const assets = await (await fetch("/offline-assets.json")).json();
-      return (
-        await Promise.all(assets.map((a: string) => cache.match(a)))
-      ).every(Boolean);
-    },
-    null,
-    { timeout: 90000 },
-  );
+  await expect
+    .poll(
+      () =>
+        page.evaluate(async () => {
+          const keys = await caches.keys();
+          const cache = await caches.open(
+            keys.find((k) => k.startsWith("hanzi100-"))!,
+          );
+          const assets = await (await fetch("/offline-assets.json")).json();
+          return (
+            await Promise.all(assets.map((a: string) => cache.match(a)))
+          ).every(Boolean);
+        }),
+      { timeout: 90000 },
+    )
+    .toBe(true);
   await page.reload();
   expect(await page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(
     true,
@@ -49,14 +51,26 @@ test("production PWA caches the full shell and supports offline navigation, stro
     .getByRole("button", { name: "Practice writing", exact: true })
     .click();
   await expect(page.locator("canvas")).toBeVisible();
-  for(let i=0;i<10;i++){
-    const rect=(await page.locator('canvas').boundingBox())!;
-    await page.mouse.move(rect.x+80,rect.y+80);await page.mouse.down();await page.mouse.move(rect.x+160,rect.y+170,{steps:3});await page.mouse.up();
-    await page.getByRole('button',{name:i===9?'Done':'Next repetition',exact:true}).click();
+  for (let i = 0; i < 10; i++) {
+    const rect = (await page.locator("canvas").boundingBox())!;
+    await page.mouse.move(rect.x + 80, rect.y + 80);
+    await page.mouse.down();
+    await page.mouse.move(rect.x + 160, rect.y + 170, { steps: 3 });
+    await page.mouse.up();
+    await page
+      .getByRole("button", {
+        name: i === 9 ? "Done" : "Next repetition",
+        exact: true,
+      })
+      .click();
   }
-  await page.getByRole('button',{name:'Reveal answer'}).click();await page.getByRole('button',{name:'Yes',exact:true}).click();
-  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('hanzi100:v1:demo')!));
-  expect(stored.words['f1-001'].card.reps).toBe(1);expect(stored.writing).toHaveLength(10);
+  await page.getByRole("button", { name: "Reveal answer" }).click();
+  await page.getByRole("button", { name: "Yes", exact: true }).click();
+  const stored = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("hanzi100:v1:demo")!),
+  );
+  expect(stored.words["f1-001"].card.reps).toBe(1);
+  expect(stored.writing).toHaveLength(10);
 
   await page.getByRole("button", { name: "Pause practice" }).click();
   await page.getByRole("link", { name: "Save & leave" }).click();

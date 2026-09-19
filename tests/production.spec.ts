@@ -75,19 +75,23 @@ test.describe("production Supabase", () => {
       await page.evaluate(async () => {
         await navigator.serviceWorker.ready;
       });
-      await page.waitForFunction(
-        async () => {
-          const assets = await (await fetch("/offline-assets.json")).json();
-          const cache = await caches.open(
-            (await caches.keys()).find((k) => k.startsWith("hanzi100-"))!,
-          );
-          return (
-            await Promise.all(assets.map((asset: string) => cache.match(asset)))
-          ).every(Boolean);
-        },
-        null,
-        { timeout: 90000 },
-      );
+      await expect
+        .poll(
+          () =>
+            page.evaluate(async () => {
+              const assets = await (await fetch("/offline-assets.json")).json();
+              const cache = await caches.open(
+                (await caches.keys()).find((k) => k.startsWith("hanzi100-"))!,
+              );
+              return (
+                await Promise.all(
+                  assets.map((asset: string) => cache.match(asset)),
+                )
+              ).every(Boolean);
+            }),
+          { timeout: 90000 },
+        )
+        .toBe(true);
       await context.setOffline(true);
       await page.reload();
       await page
