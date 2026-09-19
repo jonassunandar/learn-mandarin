@@ -53,13 +53,17 @@ export function LearningProvider({ children }: { children: ReactNode }) {
     busy.current = true;
     setSyncStatus("Syncing…");
     try {
-      const merged = await syncCloud(current.current, uid);
+      const sent = current.current;
+      const merged = await syncCloud(sent, uid);
+      const changedWhileSyncing = current.current !== sent;
       if (identity.current !== uid) return;
       const next = mergeData(current.current, merged);
       saveLocal(next, uid);
       current.current = next;
       setData(next);
-      setSyncStatus("Synced");
+      setSyncStatus(
+        changedWhileSyncing ? "Saved locally · sync pending" : "Synced",
+      );
     } catch {
       setSyncStatus("Saved locally · sync pending");
     } finally {
@@ -103,7 +107,7 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         const value = JSON.parse(localStorage.getItem(IDENTITY_KEY) || "null");
         if (typeof value?.id === "string") cached = value;
       } catch {}
-      load(cached);
+      if (cached) load(cached);
       void supabase.auth
         .getSession()
         .then(({ data, error }) => {

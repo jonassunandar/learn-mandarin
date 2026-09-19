@@ -4,7 +4,7 @@ A mobile-first Mandarin notebook: see a word, hear it, watch its strokes, write 
 
 ## Run immediately
 
-Use Node.js 22.13+ (Node 24 LTS recommended).
+Use Node.js 24 LTS (also pinned for production).
 
 ```bash
 npm install
@@ -27,6 +27,20 @@ For a phone on the same Wi-Fi, open `http://YOUR_COMPUTER_LAN_IP:3000`. The dev 
 - Use the close button to pause. Completed reviews, repetitions, and your position in the session persist. In-progress drawings are intentionally ephemeral. Reset count starts that character’s repetition target again; completed attempts remain in statistics.
 
 Writing targets and limits live in `lib/practice/session.ts`: new 10, learning 5, strong 3. Multi-character words are written character by character, then recalled as a whole word. A repetition means one completed canvas attempt; recall drawings count too.
+
+## Production
+
+- App: https://hanzi100.vercel.app
+- Repository: https://github.com/jonassunandar/learn-mandarin
+- Supabase project: `hanzi100-production` (`jehaacvimraulsrolaok`), Singapore.
+- Sign in with username `admin` and the configured password. Public signup is disabled.
+- Vercel production uses only the public project URL, public anon key, and admin email. The service-role key and database password remain in ignored local setup configuration.
+
+To verify the production database with disposable accounts (without touching learner progress):
+
+```bash
+node --env-file=.env.local --import tsx scripts/verify-production.ts
+```
 
 ## Supabase setup
 
@@ -65,7 +79,7 @@ RLS restricts all private tables to the authenticated user. The `sync_learning` 
 
 Progress is saved locally before network work. A cloud sync is attempted on login, review, every 30 seconds while open, when connectivity returns, and when leaving practice with the pause button. Pending work survives closing the browser; reopening retries it. The footer shows pending/synced state. There is no background sync requirement.
 
-Demo data and each signed-in user have separate local namespaces. Signing in starts/resumes that account’s data; it does not silently upload demo activity. Signing out returns to device-only demo data. Sync merges concurrent events, but simultaneous offline reviews of the _same word_ on two devices use the latest card snapshot rather than replaying both histories. Avoid studying the same word simultaneously on separate devices. Local browser data should not be cleared before pending work has synced.
+Demo data and each signed-in user have separate local namespaces. Signing in starts/resumes that account’s data; it does not silently upload demo activity. Demo mode is available when Supabase environment variables are absent. Configured deployments require sign-in; signing out returns to the sign-in screen. Sync merges concurrent events, but simultaneous offline reviews of the _same word_ on two devices use the latest card snapshot rather than replaying both histories. Avoid studying the same word simultaneously on separate devices. Local browser data should not be cleared before pending work has synced.
 
 ## Install and use offline
 
@@ -74,7 +88,7 @@ npm run build
 npm start
 ```
 
-The production build generates a versioned service worker cache. The app registers it only in production, avoiding stale development bundles. On an initial online visit it caches the public page shell, all Foundation 1 detail pages, JavaScript/CSS, icons, and all 115 distinct character stroke files. Keep the first online visit open briefly to complete caching. It never caches Supabase requests or authentication responses.
+The production compiler hook generates a versioned service worker cache before Vercel packages public files. The app registers it only in production, avoiding stale development bundles. On an initial online visit it caches the public page shell, all Foundation 1 detail pages, JavaScript/CSS, icons, and all 115 distinct character stroke files. Keep the first online visit open briefly to complete caching. It never caches Supabase requests or authentication responses.
 
 - **Samsung / Android:** open the HTTPS deployment in Chrome or Samsung Internet and choose **Install app** / **Add to Home screen**.
 - **iPhone / iPad:** open in Safari → Share → **Add to Home Screen**.
@@ -101,11 +115,14 @@ npm run typecheck
 npm run lint
 npm test
 npm run build
-# With npm run dev (or npm start) already running:
+# For demo browser tests, start a server with cloud configuration disabled:
+# NEXT_PUBLIC_SUPABASE_URL= NEXT_PUBLIC_SUPABASE_ANON_KEY= npm run dev
 npx playwright install chromium
 npx playwright test
 # Offline test against a production server on port 3001:
 TEST_OFFLINE=1 TEST_BASE_URL=http://localhost:3001 npx playwright test tests/offline.spec.ts
+# Live production UI and offline-to-cloud tests (uses disposable accounts):
+TEST_PRODUCTION=1 TEST_BASE_URL=https://hanzi100.vercel.app node --env-file=.env.local node_modules/@playwright/test/cli.js test tests/production.spec.ts
 ```
 
 Unit tests cover exact vocabulary count, unique entries, tone-marked data, local strokes, daily limits, review priority, FSRS due dates, storage isolation, and merge idempotency. Browser tests cover the learning flow, writing controls, interruption, session resumption, local persistence, multi-character practice, dark mode, and layout overflow at mobile/tablet/desktop sizes. Offline tests verify service-worker control, cached stroke assets, and practice after disconnecting.

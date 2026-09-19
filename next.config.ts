@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
+import { prepareOffline } from "./scripts/prepare-offline";
 const config: NextConfig = {
+  compiler: { runAfterProductionCompile: prepareOffline },
   async headers() {
     return [
       {

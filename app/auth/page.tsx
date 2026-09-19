@@ -37,7 +37,7 @@ export default function Auth() {
           <button
             className="text-button"
             onClick={async () => {
-              await supabase!.auth.signOut();
+              await supabase!.auth.signOut({ scope: "local" });
               router.push("/");
             }}
           >
@@ -103,7 +103,7 @@ export default function Auth() {
         Back to your notebook
       </Link>
       <p className="small muted">
-        Device-only practice and account progress are stored separately.
+        Your progress is saved on this device and synced to your account.
       </p>
     </section>
   );

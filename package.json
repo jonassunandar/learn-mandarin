@@ -10,8 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "assets": "tsx scripts/prepare-assets.ts",
-    "postinstall": "npm run assets",
-    "postbuild": "tsx scripts/prepare-offline.ts"
+    "postinstall": "npm run assets"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
@@ -37,6 +36,6 @@
     "typescript": "^5.9.0"
   },
   "engines": {
-    "node": ">=22.13.0"
+    "node": "24.x"
   }
 }

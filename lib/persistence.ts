@@ -97,7 +97,7 @@ export async function syncCloud(
   ]);
   if (results[0].error) throw results[0].error;
   const remote = emptyData();
-  remote.onboarded = true;
+
   for (const w of results[0].data ?? [])
     remote.words[w.vocabulary_id] = {
       vocabularyId: w.vocabulary_id,
@@ -119,5 +119,9 @@ export async function syncCloud(
     repetitions: r.repetitions,
     at: r.created_at,
   }));
+  remote.onboarded =
+    Object.keys(remote.words).length > 0 ||
+    remote.reviews.length > 0 ||
+    remote.writing.length > 0;
   return mergeData(data, remote);
 }

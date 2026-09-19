@@ -1,6 +1,6 @@
 "use client";
 import Link from "@/components/AppLink";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Home,
@@ -15,9 +15,14 @@ import {
 import { useLearning } from "./LearningProvider";
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
+  const router = useRouter();
   const [dark, setDark] = useState(false);
-  const { syncStatus, cloud, user, error } = useLearning();
+  const { syncStatus, cloud, user, error, ready } = useLearning();
   const practicing = path === "/practice";
+  const needsSignIn = cloud && !user && path !== "/auth";
+  useEffect(() => {
+    if (ready && needsSignIn) router.replace("/auth");
+  }, [ready, needsSignIn, router]);
   useEffect(() => {
     const choice = localStorage.getItem("hanzi100-theme");
     const value = choice
@@ -68,8 +73,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
           {error}
         </div>
       )}
-      <main id="main">{children}</main>
-      {!practicing && (
+      <main id="main">
+        {needsSignIn ? (
+          <div className="loading">Opening your account…</div>
+        ) : (
+          children
+        )}
+      </main>
+      {!practicing && !needsSignIn && (!cloud || !!user) && (
         <>
           <footer className="save-status">
             <Cloud size={14} />
