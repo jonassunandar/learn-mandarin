@@ -6,6 +6,7 @@ export const emptyData = (): LearningData => ({
   words: {},
   reviews: [],
   writing: [],
+  bopomofo: {},
 });
 export function storageKey(userId?: string) {
   return `hanzi100:v1:${userId ?? "demo"}`;
@@ -23,12 +24,17 @@ export function readLocal(userId?: string): LearningData {
     throw new Error(
       "Your saved data could not be read. Export browser storage before clearing it.",
     );
-  return data;
+  return { ...data, bopomofo: data.bopomofo ?? {} };
 }
 export function saveLocal(data: LearningData, userId?: string) {
   localStorage.setItem(storageKey(userId), JSON.stringify(data));
 }
 export function mergeData(a: LearningData, b: LearningData): LearningData {
+  const bopomofo = { ...a.bopomofo };
+  for (const [id, at] of Object.entries(b.bopomofo ?? {})) {
+    if (!bopomofo[id] || Date.parse(at) > Date.parse(bopomofo[id]))
+      bopomofo[id] = at;
+  }
   const words = { ...a.words };
   Object.entries(b.words).forEach(([id, word]) => {
     if (
@@ -40,6 +46,7 @@ export function mergeData(a: LearningData, b: LearningData): LearningData {
   return {
     version: 1,
     onboarded: a.onboarded || b.onboarded,
+    bopomofo,
     words,
     reviews: [
       ...new Map([...a.reviews, ...b.reviews].map((r) => [r.id, r])).values(),
@@ -71,6 +78,12 @@ export async function syncCloud(
   // One transaction; stable event IDs make retries safe. RPC derives user identity from JWT.
   const { error } = await supabase.rpc("sync_learning", { payload: data });
   if (error) throw error;
+  if (Object.keys(data.bopomofo ?? {}).length) {
+    const result = await supabase.rpc("sync_bopomofo", {
+      completions: data.bopomofo,
+    });
+    if (result.error) throw result.error;
+  }
   const results = await Promise.all([
     supabase
       .from("user_vocabulary")
@@ -94,9 +107,16 @@ export async function syncCloud(
         .order("id")
         .range(from, to),
     ),
+    supabase
+      .from("bopomofo_progress")
+      .select("lesson_id,completed_at")
+      .eq("user_id", userId),
   ]);
   if (results[0].error) throw results[0].error;
+  if (results[3].error) throw results[3].error;
   const remote = emptyData();
+  for (const row of results[3].data ?? [])
+    remote.bopomofo[row.lesson_id] = row.completed_at;
 
   for (const w of results[0].data ?? [])
     remote.words[w.vocabulary_id] = {

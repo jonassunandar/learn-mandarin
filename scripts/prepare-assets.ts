@@ -2,6 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { vocabulary } from "../lib/vocabulary/data";
+import { lessons } from "../lib/bopomofo/course";
+import { symbols, symbolAsset } from "../lib/bopomofo/symbols";
 async function main() {
   if (vocabulary.length !== 100)
     throw new Error(`Expected 100 words, got ${vocabulary.length}`);
@@ -37,6 +39,12 @@ async function main() {
       "/words",
       "/progress",
       "/auth",
+      "/bopomofo",
+      ...lessons.map((l) => `/bopomofo/${l.id}`),
+      ...symbols.flatMap((s) => [
+        symbolAsset(s.symbol, "json"),
+        symbolAsset(s.symbol, "wav"),
+      ]),
       "/manifest.webmanifest",
       "/icons/icon-192.png",
       "/icons/icon-512.png",

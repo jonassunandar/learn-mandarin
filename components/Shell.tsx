@@ -18,7 +18,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [dark, setDark] = useState(false);
   const { syncStatus, cloud, user, error, ready } = useLearning();
-  const practicing = path === "/practice";
+  const practicing = path === "/practice" || path.startsWith("/bopomofo/");
   const needsSignIn = cloud && !user && path !== "/auth";
   useEffect(() => {
     if (ready && needsSignIn) router.replace("/auth");

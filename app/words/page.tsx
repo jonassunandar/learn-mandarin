@@ -22,6 +22,9 @@ export default function Words() {
       <p className="muted">
         Foundation 1 · The beginning of something lasting.
       </p>
+      <Link className="text-button bpm-entry-link" href="/bopomofo">
+        ㄅㄆㄇㄈ · Learn Bopomofo →
+      </Link>
       <div className="filter-tabs" aria-label="Filter words">
         {(["all", "new", "learning", "strong"] as const).map((s) => (
           <button

@@ -145,3 +145,15 @@ Physical S Pen hardware and real Supabase service connectivity require your devi
 Foundation 2 (250 total), 3 (500 total), and 4 (1,000 total) are visible future milestones. Only Foundation 1 is available in this V1.
 
 Hanzi Writer stroke data is bundled from `hanzi-writer-data` and derived from Make Me a Hanzi / Arphic fonts. Its redistribution license is included at `public/hanzi/ARPHICPL.TXT`. Libraries: [Hanzi Writer documentation](https://hanziwriter.org/docs.html), [TS-FSRS documentation](https://open-spaced-repetition.github.io/ts-fsrs/), [Supabase](https://supabase.com/docs), [Next.js](https://nextjs.org/docs).
+
+## Bopomofo (Zhuyin) course
+
+Open **Learn Bopomofo** from Home or Words, or go to `/bopomofo`. Twenty lessons cover all 37 symbols, four tones and neutral tone, syllable blending, Pinyin spelling differences, sound contrasts, connected-speech tone changes, and short independent readings. Intermediate refers to reading the phonetic system, not a general Mandarin proficiency qualification.
+
+Each lesson includes explanations, examples with English and Indonesian meanings, and three checks with feedback. Symbol lessons have official recorded audio, a step-by-step stroke display, and a three-attempt trace/copy/recall notebook with handwriting comparison. Completions save after all three checks are answered correctly. Symbol drawings stay ephemeral and are separate from vocabulary writing statistics.
+
+- Course content: `lib/bopomofo/course.ts`; symbol reference: `lib/bopomofo/symbols.ts`.
+- Progress: additive migration `202609240001_bopomofo_progress.sql`, per-user RLS and the `sync_bopomofo` RPC. Apply with `supabase db push` before deploying this version. Existing vocabulary and FSRS data are unchanged. Old local notebooks migrate on read.
+- Offline: all course routes, symbol recordings, and stroke shapes are bundled in the PWA cache. Offline completions merge on reconnect. Word/sentence speech still depends on an available device voice.
+- Sources and attribution appear in the course and `public/bopomofo/CREDITS.md`. The 37 WAV recordings and stroke paths come from the Taiwan Ministry of Education's CC BY 4.0 materials package; recordings are unchanged, stroke paths are converted to JSON.
+- Checks: `npm test`; `TEST_BASE_URL=http://localhost:3002 npx playwright test tests/bopomofo.spec.ts` against a demo-mode server. Production verification uses temporary accounts in `scripts/verify-production.ts` and `tests/production.spec.ts`, including offline course completion and fresh-device sync.

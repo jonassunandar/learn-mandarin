@@ -187,6 +187,16 @@ export default function Home() {
         </span>
         <ChevronRight size={20} />
       </Link>
+      <Link href="/bopomofo" className="collection-link bpm-entry">
+        <span className="collection-character" lang="zh-TW">
+          ㄅ
+        </span>
+        <span>
+          <strong>Learn Bopomofo</strong>
+          <small>37 symbols · Beginner to intermediate · 20 lessons</small>
+        </span>
+        <ChevronRight size={20} />
+      </Link>
       <p className="closing-note">No rush. Just one word, then another.</p>
     </div>
   );

@@ -5,6 +5,7 @@ import { useLearning } from "@/components/LearningProvider";
 import { wordState } from "@/lib/fsrs/scheduler";
 import { vocabulary, milestones } from "@/lib/vocabulary/data";
 import { localDay } from "@/lib/practice/session";
+import { lessons } from "@/lib/bopomofo/course";
 export default function Progress() {
   const { data, ready } = useLearning();
   if (!ready) return <div className="loading">Opening your progress…</div>;
@@ -86,6 +87,16 @@ export default function Progress() {
           </div>
         </section>
       </div>
+      <section className="bpm-progress-card">
+        <h2>Bopomofo reading</h2>
+        <p>
+          {lessons.filter((l) => data.bopomofo[l.id]).length} / {lessons.length}{" "}
+          lessons completed
+        </p>
+        <Link href="/bopomofo" className="text-button">
+          Continue learning →
+        </Link>
+      </section>
       <section className="milestones">
         <h2>Your foundations</h2>
         {milestones.map((m) => (

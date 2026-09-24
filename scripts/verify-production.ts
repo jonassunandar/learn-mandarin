@@ -67,11 +67,16 @@ async function main() {
     for (let attempt = 0; attempt < 2; attempt++) {
       const sync = await clients[0].rpc("sync_learning", { payload });
       assert.equal(sync.error, null);
+      const course = await clients[0].rpc("sync_bopomofo", {
+        completions: { "first-symbols": word.updatedAt },
+      });
+      assert.equal(course.error, null);
     }
     for (const table of [
       "user_vocabulary",
       "review_history",
       "handwriting_sessions",
+      "bopomofo_progress",
     ]) {
       const own = await clients[0].from(table).select("*", { count: "exact" });
       assert.equal(own.error, null);
@@ -101,6 +106,24 @@ async function main() {
       forged.error,
       "RLS must reject writing to another user's account",
     );
+    const forgedCourse = await clients[1]
+      .from("bopomofo_progress")
+      .insert({
+        user_id: users[0],
+        lesson_id: "tones",
+        completed_at: word.updatedAt,
+      });
+    assert.ok(
+      forgedCourse.error,
+      "RLS must reject another user's course completion",
+    );
+    const anonymousCourse = await publicClient.rpc("sync_bopomofo", {
+      completions: { tones: word.updatedAt },
+    });
+    assert.ok(
+      anonymousCourse.error,
+      "Anonymous clients cannot save lesson progress",
+    );
     const vocabularyEdit = await clients[0]
       .from("vocabulary")
       .update({ meaning_en: "forbidden" })
@@ -115,7 +138,7 @@ async function main() {
       "Anonymous clients must not call sync",
     );
     console.log(
-      "Verified: 100 seeded words, authentication, FSRS sync, idempotency, and user isolation.",
+      "Verified: 100 seeded words, authentication, FSRS and Bopomofo sync, idempotency, and user isolation.",
     );
   } finally {
     for (const id of users) {

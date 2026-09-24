@@ -36,6 +36,7 @@ type ContextValue = {
   ) => void;
   write: (id: string, character: string) => void;
   sync: () => void;
+  completeLesson: (id: string) => void;
 };
 const Context = createContext<ContextValue | null>(null);
 export function LearningProvider({ children }: { children: ReactNode }) {
@@ -207,6 +208,16 @@ export function LearningProvider({ children }: { children: ReactNode }) {
     },
     [update],
   );
+  const completeLesson = useCallback(
+    (id: string) => {
+      update((d) => ({
+        ...d,
+        bopomofo: { ...d.bopomofo, [id]: new Date().toISOString() },
+      }));
+      void sync();
+    },
+    [update, sync],
+  );
   return (
     <Context.Provider
       value={{
@@ -220,6 +231,7 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         review,
         write,
         sync,
+        completeLesson,
       }}
     >
       {children}

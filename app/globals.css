@@ -1677,3 +1677,315 @@ svg {
 .app-shell {
   padding-top: env(safe-area-inset-top);
 }
+
+/* Bopomofo course: the same quiet notebook, with room for sound symbols. */
+.bpm-page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 28px 0 36px;
+}
+.bpm-page h1 {
+  font-size: clamp(28px, 5vw, 40px);
+  line-height: 1.2;
+  margin: 12px 0 16px;
+}
+.bpm-page h2 {
+  font-size: 21px;
+  margin: 0 0 10px;
+}
+.bpm-page p {
+  line-height: 1.7;
+}
+.bpm-page .primary-button {
+  margin-top: 18px;
+}
+.bpm-hero-symbols {
+  font-size: 52px;
+  color: var(--green);
+  margin: 22px 0;
+}
+.bpm-course-progress {
+  margin: 24px 0 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.bpm-course-progress progress {
+  display: block;
+  width: 100%;
+  height: 7px;
+  margin-top: 12px;
+  accent-color: var(--green);
+}
+.bpm-level,
+.bpm-reference {
+  margin-top: 38px;
+}
+.bpm-lesson-list {
+  border-top: 1px solid var(--line);
+  margin-top: 16px;
+}
+.bpm-lesson-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 19px 0;
+  border-bottom: 1px solid var(--line);
+}
+.bpm-lesson-link > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.bpm-lesson-link strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 550;
+}
+.bpm-lesson-link small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+.bpm-number {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.bpm-completion {
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--green);
+}
+.bpm-symbol-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 9px;
+  margin-top: 18px;
+}
+.bpm-symbol-grid button,
+.bpm-symbol-tabs button {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  min-height: 64px;
+  padding: 8px;
+}
+.bpm-symbol-grid button[aria-pressed="true"],
+.bpm-symbol-tabs button[aria-pressed="true"] {
+  border-color: var(--green);
+  background: var(--pale);
+}
+.bpm-symbol-grid button > span {
+  display: block;
+  font-size: 30px;
+}
+.bpm-symbol-grid small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.bpm-sources {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 36px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.bpm-sources summary {
+  padding: 10px 0;
+  cursor: pointer;
+}
+.bpm-sources p {
+  margin: 12px 0;
+}
+.bpm-sources a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.bpm-goal {
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+.bpm-prose p {
+  margin: 18px 0;
+  font-size: 15px;
+}
+.bpm-done {
+  color: var(--green);
+  font-size: 13px;
+}
+.bpm-study {
+  margin: 26px 0;
+  border: 1px solid var(--line);
+  background: var(--card);
+  padding: 20px;
+  border-radius: 18px;
+}
+.bpm-symbol-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0;
+}
+.bpm-symbol-tabs button {
+  font-size: 30px;
+  min-width: 52px;
+}
+.bpm-strokes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 12px 0;
+}
+.bpm-strokes svg {
+  width: 180px;
+  height: 180px;
+  max-width: 100%;
+  color: var(--ink);
+}
+.bpm-symbol-heading {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.bpm-symbol {
+  font-size: 76px;
+  line-height: 1.4;
+}
+.bpm-notebook > .muted {
+  font-size: 13px;
+  margin: 12px 0;
+}
+.bpm-stage {
+  color: var(--green);
+  font-size: 13px;
+  margin: 20px 0 12px;
+}
+.bpm-notebook .writing-paper {
+  max-height: none;
+}
+.bpm-hint {
+  margin: 14px auto 0;
+}
+.bpm-examples {
+  margin: 32px 0 24px;
+}
+.bpm-reading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+.bpm-reading {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  overflow-wrap: anywhere;
+}
+.bpm-zhuyin {
+  font-size: clamp(24px, 5vw, 30px);
+  color: var(--green);
+  letter-spacing: 1px;
+}
+.bpm-syllable {
+  display: inline-block;
+  white-space: nowrap;
+}
+.bpm-reading-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+.bpm-reading-heading h3 {
+  font-size: 26px;
+  font-weight: 400;
+}
+.bpm-reading-heading .audio-button {
+  margin: 0 0 0 auto;
+}
+.bpm-reading .pinyin {
+  font-size: 18px;
+  margin: 8px 0;
+}
+.bpm-reading > p:not(.bpm-zhuyin):not(.pinyin) {
+  font-size: 13px;
+}
+.bpm-note {
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.bpm-check,
+.bpm-finish {
+  margin-top: 32px;
+}
+.bpm-options {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0;
+}
+.bpm-options button {
+  min-height: 60px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--card);
+  font-size: 19px;
+  padding: 16px;
+  text-align: left;
+}
+.bpm-options button.selected {
+  border-color: var(--green);
+  background: var(--pale);
+}
+.bpm-options button:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.bpm-feedback {
+  padding: 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.bpm-feedback p {
+  font-size: 14px;
+  margin-top: 6px;
+}
+.bpm-check > .text-button,
+.bpm-finish > .text-button {
+  margin: 16px auto;
+}
+.bpm-entry {
+  margin-top: 12px;
+}
+.bpm-entry-link {
+  justify-content: flex-start;
+  margin-top: 14px;
+}
+.bpm-progress-card {
+  padding: 24px;
+  margin: 20px 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+}
+.bpm-progress-card p {
+  color: var(--muted);
+  margin: 12px 0;
+}
+@media (max-width: 480px) {
+  .bpm-study {
+    padding: 14px;
+  }
+  .bpm-lesson-link {
+    gap: 10px;
+  }
+  .bpm-completion {
+    font-size: 10px;
+  }
+  .bpm-prose p {
+    font-size: 14px;
+  }
+}
