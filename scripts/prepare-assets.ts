@@ -40,6 +40,7 @@ async function main() {
       "/progress",
       "/auth",
       "/bopomofo",
+      "/hsk",
       ...lessons.map((l) => `/bopomofo/${l.id}`),
       ...symbols.flatMap((s) => [
         symbolAsset(s.symbol, "json"),

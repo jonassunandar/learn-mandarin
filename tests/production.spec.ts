@@ -172,6 +172,11 @@ test.describe("production Supabase", () => {
       await expect(page.locator(".bpm-course-progress")).toContainText(
         "1 / 20",
       );
+      await page.goto(`${process.env.TEST_BASE_URL}/hsk`);
+      await page.getByRole("button", { name: "Start my 90-day plan" }).click();
+      await page.locator(".hsk-tasks input").first().check();
+      await page.reload();
+      await expect(page.locator(".hsk-tasks input").first()).toBeChecked();
       await context.setOffline(false);
       await expect(page.locator(".save-status")).toContainText("Synced", {
         timeout: 45000,
@@ -202,9 +207,22 @@ test.describe("production Supabase", () => {
         .getByRole("link", { name: "Progress", exact: true })
         .click();
       await expect(otherPage.locator(".stats-grid")).toContainText("10");
-      await expect(otherPage.locator(".bpm-progress-card")).toContainText(
-        "1 / 20",
-      );
+      await expect(
+        otherPage.locator(".bpm-progress-card").first(),
+      ).toContainText("1 / 20");
+      await otherPage.goto(`${process.env.TEST_BASE_URL}/hsk`);
+      await expect(otherPage.locator(".hsk-tasks input").first()).toBeChecked();
+      const hskRows = await learner
+        .from("hsk_progress")
+        .select("entry_key,value");
+      expect(hskRows.error).toBeNull();
+      expect(hskRows.data).toContainEqual({
+        entry_key: "day-1-0",
+        value: "true",
+      });
+      const anonClient = createClient(url, anon, options);
+      const hiddenRows = await anonClient.from("hsk_progress").select("*");
+      expect(hiddenRows.data ?? []).toEqual([]);
       const completions = await learner
         .from("bopomofo_progress")
         .select("lesson_id");

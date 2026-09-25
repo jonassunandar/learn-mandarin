@@ -187,6 +187,16 @@ export default function Home() {
         </span>
         <ChevronRight size={20} />
       </Link>
+      <Link href="/hsk" className="collection-link">
+        <span className="collection-character" lang="zh-CN">
+          路
+        </span>
+        <span>
+          <strong>Your three-month Mandarin path</strong>
+          <small>HSK 1–3 · Daily guidance · Weekly checkpoints</small>
+        </span>
+        <ChevronRight size={20} />
+      </Link>
       <Link href="/bopomofo" className="collection-link bpm-entry">
         <span className="collection-character" lang="zh-TW">
           ㄅ

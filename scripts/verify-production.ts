@@ -71,12 +71,17 @@ async function main() {
         completions: { "first-symbols": word.updatedAt },
       });
       assert.equal(course.error, null);
+      const hsk = await clients[0].rpc("sync_hsk", {
+        entries: { "day-1-0": { value: "true", updatedAt: word.updatedAt } },
+      });
+      assert.equal(hsk.error, null);
     }
     for (const table of [
       "user_vocabulary",
       "review_history",
       "handwriting_sessions",
       "bopomofo_progress",
+      "hsk_progress",
     ]) {
       const own = await clients[0].from(table).select("*", { count: "exact" });
       assert.equal(own.error, null);
@@ -106,16 +111,40 @@ async function main() {
       forged.error,
       "RLS must reject writing to another user's account",
     );
-    const forgedCourse = await clients[1]
-      .from("bopomofo_progress")
-      .insert({
-        user_id: users[0],
-        lesson_id: "tones",
-        completed_at: word.updatedAt,
-      });
+    const forgedCourse = await clients[1].from("bopomofo_progress").insert({
+      user_id: users[0],
+      lesson_id: "tones",
+      completed_at: word.updatedAt,
+    });
     assert.ok(
       forgedCourse.error,
       "RLS must reject another user's course completion",
+    );
+    const forgedHsk = await clients[1]
+      .from("hsk_progress")
+      .insert({
+        user_id: users[0],
+        entry_key: "day-1-1",
+        value: "true",
+        updated_at: word.updatedAt,
+      });
+    assert.ok(forgedHsk.error, "RLS must reject another user’s HSK progress");
+    const anonymousHsk = await publicClient.rpc("sync_hsk", { entries: {} });
+    assert.ok(anonymousHsk.error);
+    const staleHsk = await clients[0].rpc("sync_hsk", {
+      entries: {
+        "day-1-0": { value: "false", updatedAt: "2020-01-01T00:00:00Z" },
+      },
+    });
+    assert.equal(staleHsk.error, null);
+    const savedHsk = await clients[0]
+      .from("hsk_progress")
+      .select("value")
+      .single();
+    assert.equal(
+      savedHsk.data?.value,
+      "true",
+      "Stale offline snapshots must not overwrite newer tasks",
     );
     const anonymousCourse = await publicClient.rpc("sync_bopomofo", {
       completions: { tones: word.updatedAt },
@@ -138,7 +167,7 @@ async function main() {
       "Anonymous clients must not call sync",
     );
     console.log(
-      "Verified: 100 seeded words, authentication, FSRS and Bopomofo sync, idempotency, and user isolation.",
+      "Verified: 100 seeded words, authentication, FSRS, HSK and Bopomofo sync, idempotency, and user isolation.",
     );
   } finally {
     for (const id of users) {

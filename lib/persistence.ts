@@ -7,6 +7,7 @@ export const emptyData = (): LearningData => ({
   reviews: [],
   writing: [],
   bopomofo: {},
+  hsk: {},
 });
 export function storageKey(userId?: string) {
   return `hanzi100:v1:${userId ?? "demo"}`;
@@ -24,7 +25,7 @@ export function readLocal(userId?: string): LearningData {
     throw new Error(
       "Your saved data could not be read. Export browser storage before clearing it.",
     );
-  return { ...data, bopomofo: data.bopomofo ?? {} };
+  return { ...data, bopomofo: data.bopomofo ?? {}, hsk: data.hsk ?? {} };
 }
 export function saveLocal(data: LearningData, userId?: string) {
   localStorage.setItem(storageKey(userId), JSON.stringify(data));
@@ -34,6 +35,14 @@ export function mergeData(a: LearningData, b: LearningData): LearningData {
   for (const [id, at] of Object.entries(b.bopomofo ?? {})) {
     if (!bopomofo[id] || Date.parse(at) > Date.parse(bopomofo[id]))
       bopomofo[id] = at;
+  }
+  const hsk = { ...a.hsk };
+  for (const [key, item] of Object.entries(b.hsk ?? {})) {
+    if (
+      !hsk[key] ||
+      Date.parse(item.updatedAt) > Date.parse(hsk[key].updatedAt)
+    )
+      hsk[key] = item;
   }
   const words = { ...a.words };
   Object.entries(b.words).forEach(([id, word]) => {
@@ -47,6 +56,7 @@ export function mergeData(a: LearningData, b: LearningData): LearningData {
     version: 1,
     onboarded: a.onboarded || b.onboarded,
     bopomofo,
+    hsk,
     words,
     reviews: [
       ...new Map([...a.reviews, ...b.reviews].map((r) => [r.id, r])).values(),
@@ -84,6 +94,10 @@ export async function syncCloud(
     });
     if (result.error) throw result.error;
   }
+  if (Object.keys(data.hsk ?? {}).length) {
+    const result = await supabase.rpc("sync_hsk", { entries: data.hsk });
+    if (result.error) throw result.error;
+  }
   const results = await Promise.all([
     supabase
       .from("user_vocabulary")
@@ -111,10 +125,17 @@ export async function syncCloud(
       .from("bopomofo_progress")
       .select("lesson_id,completed_at")
       .eq("user_id", userId),
+    supabase
+      .from("hsk_progress")
+      .select("entry_key,value,updated_at")
+      .eq("user_id", userId),
   ]);
   if (results[0].error) throw results[0].error;
   if (results[3].error) throw results[3].error;
+  if (results[4].error) throw results[4].error;
   const remote = emptyData();
+  for (const row of results[4].data ?? [])
+    remote.hsk[row.entry_key] = { value: row.value, updatedAt: row.updated_at };
   for (const row of results[3].data ?? [])
     remote.bopomofo[row.lesson_id] = row.completed_at;
 

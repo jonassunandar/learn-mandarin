@@ -51,5 +51,6 @@ export type LearningData = {
   reviews: Review[];
   writing: Writing[];
   bopomofo: Record<string, string>;
+  hsk: Record<string, { value: string; updatedAt: string }>;
 };
 export type WordState = "new" | "learning" | "strong";

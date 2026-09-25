@@ -97,6 +97,22 @@ export default function Progress() {
           Continue learning →
         </Link>
       </section>
+      <section className="bpm-progress-card">
+        <h2>Your HSK study path</h2>
+        <p>
+          {
+            Array.from({ length: 90 }, (_, i) => i + 1).filter((d) =>
+              [0, 1, 2, 3].every(
+                (t) => data.hsk[`day-${d}-${t}`]?.value === "true",
+              ),
+            ).length
+          }{" "}
+          / 90 study days completed
+        </p>
+        <Link href="/hsk" className="text-button">
+          Open daily guidance →
+        </Link>
+      </section>
       <section className="milestones">
         <h2>Your foundations</h2>
         {milestones.map((m) => (

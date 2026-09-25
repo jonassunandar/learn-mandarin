@@ -37,6 +37,7 @@ type ContextValue = {
   write: (id: string, character: string) => void;
   sync: () => void;
   completeLesson: (id: string) => void;
+  setHsk: (key: string, value: string) => void;
 };
 const Context = createContext<ContextValue | null>(null);
 export function LearningProvider({ children }: { children: ReactNode }) {
@@ -218,6 +219,19 @@ export function LearningProvider({ children }: { children: ReactNode }) {
     },
     [update, sync],
   );
+  const setHsk = useCallback(
+    (key: string, value: string) => {
+      update((d) => ({
+        ...d,
+        hsk: {
+          ...d.hsk,
+          [key]: { value, updatedAt: new Date().toISOString() },
+        },
+      }));
+      void sync();
+    },
+    [update, sync],
+  );
   return (
     <Context.Provider
       value={{
@@ -232,6 +246,7 @@ export function LearningProvider({ children }: { children: ReactNode }) {
         write,
         sync,
         completeLesson,
+        setHsk,
       }}
     >
       {children}

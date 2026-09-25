@@ -157,3 +157,11 @@ Each lesson includes explanations, examples with English and Indonesian meanings
 - Offline: all course routes, symbol recordings, and stroke shapes are bundled in the PWA cache. Offline completions merge on reconnect. Word/sentence speech still depends on an available device voice.
 - Sources and attribution appear in the course and `public/bopomofo/CREDITS.md`. The 37 WAV recordings and stroke paths come from the Taiwan Ministry of Education's CC BY 4.0 materials package; recordings are unchanged, stroke paths are converted to JSON.
 - Checks: `npm test`; `TEST_BASE_URL=http://localhost:3002 npx playwright test tests/bopomofo.spec.ts` against a demo-mode server. Production verification uses temporary accounts in `scripts/verify-production.ts` and `tests/production.spec.ts`, including offline course completion and fresh-device sync.
+
+### Guided 90-day HSK path
+
+`/hsk` contains a 12-week guided route plus six buffer days, 36 original bilingual sentence examples, listening playback, weekly understanding checks, practical checkpoints, and four daily tasks. Choose 30–45, 60–90, or 90–120 minutes per day. Dates use the learner’s local calendar; missed tasks remain available. Checklist completion is self-reported and is separate from FSRS vocabulary mastery.
+
+The route references the November 2025 HSK syllabus and the announced December 13, 2026 worldwide HSK 3.0 launch. It is **not a complete HSK 1–3 vocabulary deck or a scored exam course**: the app still has exactly 100 Foundation words. The route links the official syllabus and sample materials and explicitly assigns supplementary vocabulary, listening and speaking work. Three months from zero is an intensive target, not a pass guarantee.
+
+Apply `202609250001_hsk_progress.sql` with `supabase db push` before deploying this version. Its per-user RLS table and `sync_hsk` RPC persist start date, time budget, daily tasks and practical checkpoints. Per-entry timestamps merge offline changes, including unchecked tasks, without replacing unrelated entries. Existing accounts and local demo notebooks migrate automatically on read.
